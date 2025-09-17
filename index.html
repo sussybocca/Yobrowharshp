@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Ultimate AI Game Hub - Firebase</title>
 
-<!-- Firebase App (the core Firebase SDK) -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
@@ -16,20 +16,21 @@
   h2 { color:#f0f0f0; text-align:center; }
   input, button { padding:10px; margin:5px 0; border-radius:5px; border:none; }
   #auth-messages { margin-bottom:10px; color:#ffcc00; }
+  #protectedContent { display:none; }
+  iframe { width:300px; height:200px; border:none; border-radius:5px; }
+  #tyreeseMessages { height:250px; overflow-y:auto; background: rgba(0,0,0,0.2); padding:15px; border-radius:10px; font-style:italic; }
 </style>
 
 <script>
   // ---------------- Firebase Configuration ----------------
   const firebaseConfig = {
     apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
-    authDomain: "YOUR_FIREBASE_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_FIREBASE_PROJECT_ID",
-    storageBucket: "YOUR_FIREBASE_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    authDomain: "yodude-44fdb.firebaseapp.com",
+    projectId: "yodude-44fdb",
+    storageBucket: "yodude-44fdb.appspot.com",
+    messagingSenderId: "421085612215",
+    appId: "1:421085612215:web:YOUR_APP_ID_HERE" // replace with your actual appId from Firebase Console
   };
-
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 </script>
@@ -38,13 +39,13 @@
 
 <header>
   <h1>🎮 Ultimate AI Game Hub</h1>
-  <p>Login to save your data and play!</p>
+  <p>Login to access all features!</p>
 </header>
 
 <!-- Login / Signup -->
 <section id="auth">
   <h2>🔑 Login / Signup</h2>
-  <div id="auth-messages"></div>
+  <div id="auth-messages">🔐 Please log in or sign up</div>
 
   <input type="email" id="email" placeholder="Email" required/>
   <input type="password" id="password" placeholder="Password" required/>
@@ -53,53 +54,105 @@
   <button id="logoutBtn" style="display:none;">Logout</button>
 </section>
 
+<!-- Protected Content -->
+<div id="protectedContent">
+
+  <!-- Mini Crazy Games -->
+  <section id="mini-crazy-games">
+    <h2>🎮 Mini Crazy Games</h2>
+    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;">
+      <iframe src="https://www.crazygames.com/embed/moto-x3m" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+      <iframe src="https://www.crazygames.com/embed/shell-shockers" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+      <iframe src="https://www.crazygames.com/embed/krunker-io" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+      <iframe src="https://www.crazygames.com/embed/happy-wheels" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+      <iframe src="https://www.crazygames.com/embed/bloxdhop-io" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+    </div>
+  </section>
+
+  <!-- AI YouTube Launcher -->
+  <section id="ai-videos">
+    <h2>🎬 AI YouTube Launcher</h2>
+    <div id="video-container" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;"></div>
+  </section>
+
+  <!-- Tyreese AI Assistant -->
+  <section id="tyreese">
+    <h2>🤘 Tyreese - Your Cool AI Assistant</h2>
+    <div id="tyreeseMessages"></div>
+    <form id="tyreeseForm" style="display:flex; gap:10px; margin-top:10px;">
+      <input type="text" id="tyreeseInput" placeholder="Ask Tyreese..." required style="flex:1; padding:10px; border-radius:8px;"/>
+      <button type="submit" style="padding:10px 20px; border-radius:8px; background:#4a32a8; color:white;">Send</button>
+    </form>
+  </section>
+
+</div>
+
 <script>
+  // ---------------- Firebase Authentication ----------------
   const authMessages = document.getElementById("auth-messages");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const signupBtn = document.getElementById("signupBtn");
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
+  const protectedContent = document.getElementById("protectedContent");
 
-  // Sign Up
   signupBtn.addEventListener("click", async () => {
     try {
       await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
-      authMessages.textContent = "✅ Sign up successful! Logged in as " + emailInput.value;
-      logoutBtn.style.display = "inline-block";
-    } catch (error) {
-      authMessages.textContent = "❌ Sign up error: " + error.message;
-    }
+    } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
   });
 
-  // Login
   loginBtn.addEventListener("click", async () => {
     try {
       await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
-      authMessages.textContent = "✅ Logged in as " + emailInput.value;
-      logoutBtn.style.display = "inline-block";
-    } catch (error) {
-      authMessages.textContent = "❌ Login error: " + error.message;
-    }
+    } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
   });
 
-  // Logout
   logoutBtn.addEventListener("click", async () => {
     await auth.signOut();
-    authMessages.textContent = "✅ Logged out!";
-    logoutBtn.style.display = "none";
   });
 
-  // Auth state observer
   auth.onAuthStateChanged(user => {
     if(user){
       authMessages.textContent = "✅ Logged in as " + user.email;
       logoutBtn.style.display = "inline-block";
+      protectedContent.style.display = "block"; // Show all features
     } else {
       authMessages.textContent = "🔐 Please log in or sign up";
       logoutBtn.style.display = "none";
+      protectedContent.style.display = "none"; // Hide features until login
     }
+  });
 
+  // ---------------- Tyreese AI ----------------
+  const tyreeseForm = document.getElementById("tyreeseForm");
+  const tyreeseInput = document.getElementById("tyreeseInput");
+  const tyreeseMessages = document.getElementById("tyreeseMessages");
+
+  tyreeseForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const userMsg = tyreeseInput.value;
+    const divUser = document.createElement("div");
+    divUser.textContent = "You: " + userMsg;
+    tyreeseMessages.appendChild(divUser);
+
+    const divAI = document.createElement("div");
+    divAI.textContent = "Tyreese: 😎 Yo! I got you – " + userMsg;
+    tyreeseMessages.appendChild(divAI);
+
+    tyreeseInput.value = "";
+    tyreeseMessages.scrollTop = tyreeseMessages.scrollHeight;
+  });
+
+  // ---------------- AI Video Launcher ----------------
+  const videoContainer = document.getElementById("video-container");
+  const categories = ["Funny", "Anime", "Weird", "Dark", "Disney Conspiracy"];
+  categories.forEach(cat => {
+    const iframe = document.createElement("iframe");
+    iframe.src = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(cat + " AI");
+    videoContainer.appendChild(iframe);
+  });
 </script>
 
 </body>
