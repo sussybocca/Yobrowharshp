@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Ultimate AI Game Hub - Firebase</title>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-check-compat.js"></script>
+
+<!-- reCAPTCHA v3 -->
+<script src="https://www.google.com/recaptcha/enterprise.js?render=6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ"></script>
 
 <style>
   body { font-family: Arial, sans-serif; background:#1e1e1e; color:#fff; margin:0; padding:0; }
@@ -24,17 +28,36 @@
 </style>
 
 <script>
-  // ---------------- Firebase Configuration ----------------
+  // ---------------- Firebase Config ----------------
   const firebaseConfig = {
     apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
     authDomain: "yodude-44fdb.firebaseapp.com",
     projectId: "yodude-44fdb",
     storageBucket: "yodude-44fdb.appspot.com",
     messagingSenderId: "421085612215",
-    appId: "1:421085612215:web:YOUR_APP_ID_HERE" // replace with your actual appId
+    appId: "1:421085612215:web:YOUR_APP_ID_HERE"
   };
   firebase.initializeApp(firebaseConfig);
+
+  // ---------------- App Check ----------------
+  const appCheck = firebase.appCheck();
+  appCheck.activate('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ', true); // enforce mode
+
   const auth = firebase.auth();
+
+  // ---------------- reCAPTCHA Token ----------------
+  async function getRecaptchaToken(action) {
+    return new Promise((resolve, reject) => {
+      grecaptcha.enterprise.ready(async () => {
+        try {
+          const token = await grecaptcha.enterprise.execute('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ', { action: action });
+          resolve(token);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+  }
 </script>
 </head>
 <body>
@@ -94,7 +117,7 @@
 </div>
 
 <script>
-  // ---------------- Firebase Authentication ----------------
+  // ---------------- DOM Elements ----------------
   const authMessages = document.getElementById("auth-messages");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
@@ -103,14 +126,21 @@
   const logoutBtn = document.getElementById("logoutBtn");
   const protectedContent = document.getElementById("protectedContent");
 
+  // ---------------- Firebase Email/Password ----------------
   signupBtn.addEventListener("click", async () => {
-    try { await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value); }
-    catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
+    try {
+      const token = await getRecaptchaToken('SIGNUP');
+      console.log("reCAPTCHA token:", token);
+      await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
+    } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
   });
 
   loginBtn.addEventListener("click", async () => {
-    try { await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value); }
-    catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
+    try {
+      const token = await getRecaptchaToken('LOGIN');
+      console.log("reCAPTCHA token:", token);
+      await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
+    } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
   });
 
   logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
@@ -119,28 +149,34 @@
   const googleBtn = document.getElementById("googleBtn");
   googleBtn.addEventListener("click", async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    try { await auth.signInWithPopup(provider); }
-    catch (error) { authMessages.textContent = "❌ Google login error: " + error.message; }
+    try {
+      const token = await getRecaptchaToken('GOOGLE_LOGIN');
+      console.log("reCAPTCHA token:", token);
+      await auth.signInWithPopup(provider);
+    } catch (error) { authMessages.textContent = "❌ Google login error: " + error.message; }
   });
 
   // ---------------- GitHub Login ----------------
   const githubBtn = document.getElementById("githubBtn");
   githubBtn.addEventListener("click", async () => {
     const provider = new firebase.auth.GithubAuthProvider();
-    try { await auth.signInWithPopup(provider); }
-    catch (error) { authMessages.textContent = "❌ GitHub login error: " + error.message; }
+    try {
+      const token = await getRecaptchaToken('GITHUB_LOGIN');
+      console.log("reCAPTCHA token:", token);
+      await auth.signInWithPopup(provider);
+    } catch (error) { authMessages.textContent = "❌ GitHub login error: " + error.message; }
   });
 
-  // ---------------- Auth State Observer ----------------
+  // ---------------- Auth State ----------------
   auth.onAuthStateChanged(user => {
     if(user){
       authMessages.textContent = "✅ Logged in as " + (user.email || user.displayName);
       logoutBtn.style.display = "inline-block";
-      protectedContent.style.display = "block"; // Show all features
+      protectedContent.style.display = "block";
     } else {
       authMessages.textContent = "🔐 Please log in or sign up";
       logoutBtn.style.display = "none";
-      protectedContent.style.display = "none"; // Hide features until login
+      protectedContent.style.display = "none";
     }
   });
 
