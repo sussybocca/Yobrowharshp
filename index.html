@@ -1,313 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Ultimate AI Game Hub</title>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-
-<!-- Back4App / Parse SDK -->
-<script src="https://unpkg.com/parse/dist/parse.min.js"></script>
-
-<style>
-body { font-family: Arial, sans-serif; background:#1e1e1e; color:#fff; margin:0; padding:0; }
-header { background:#333; padding:20px; text-align:center; }
-section { padding:20px; }
-h2 { color:#f0f0f0; text-align:center; }
-input, button, textarea { padding:10px; margin:5px 0; border-radius:5px; border:none; cursor:pointer; }
-#auth-messages { margin-bottom:10px; color:#ffcc00; }
-#protectedContent { display:none; }
-iframe { width:300px; height:200px; border:none; border-radius:5px; }
-#tyreeseMessages { height:250px; overflow-y:auto; background: rgba(0,0,0,0.2); padding:15px; border-radius:10px; font-style:italic; }
-.provider-btn { background:#4a90e2; color:white; margin-top:5px; }
-.github-btn { background:#333; }
-.post-container { background: rgba(0,0,0,0.3); padding:10px; margin:10px 0; border-radius:8px; }
-.comment-container { background: rgba(0,0,0,0.2); padding:5px 10px; margin:5px 0; border-radius:5px; font-size:0.9em; }
-.like-btn, .follow-btn, .comment-btn { margin:5px; padding:5px 10px; border-radius:5px; cursor:pointer; }
-</style>
-
-<script>
-  // ---------------- Firebase Config ----------------
-  const firebaseConfig = {
-    apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
-    authDomain: "yodude-44fdb.firebaseapp.com",
-    projectId: "yodude-44fdb",
-    storageBucket: "yodude-44fdb.appspot.com",
-    messagingSenderId: "421085612215",
-    appId: "1:421085612215:web:YOUR_APP_ID_HERE"
-  };
-  firebase.initializeApp(firebaseConfig);
-
-  const auth = firebase.auth();
-
-  // ---------------- Back4App Init ----------------
-  Parse.initialize("V32Kr6GQj0LknYPynIG8T0MwgEKAcLNxmLEDzauo"); // JS Key
-  Parse.serverURL = 'https://parseapi.back4app.com/';
-</script>
+  <meta charset="UTF-8">
+  <title>Yodude Universe</title>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-functions.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #ai-response, #tyreese-response, #gamble-result { margin-top: 10px; white-space: pre-wrap; }
+    iframe { border: none; margin-top: 10px; }
+  </style>
 </head>
 <body>
+  <h1>Yodude Universe</h1>
 
-<header>
-  <h1>🎮 Ultimate AI Game Hub</h1>
-  <p>Login to access all features!</p>
-</header>
+  <!-- LOGIN -->
+  <div id="auth-section">
+    <input id="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="signup-btn">Sign Up</button>
+    <button id="signin-btn">Sign In</button>
+    <button id="google-btn">Sign In with Google</button>
+    <button id="github-btn">Sign In with GitHub</button>
+    <div id="auth-messages"></div>
+    <button id="logout-btn" style="display:none;">Logout</button>
+  </div>
 
-<!-- Login / Signup -->
-<section id="auth">
-  <h2>🔑 Login / Signup</h2>
-  <div id="auth-messages">🔐 Please log in or sign up</div>
+  <!-- PROTECTED CONTENT -->
+  <div id="protected-content" style="display:none;">
 
-  <input type="email" id="email" placeholder="Email" required/>
-  <input type="password" id="password" placeholder="Password" required/>
-  <button id="signupBtn">Sign Up</button>
-  <button id="loginBtn">Login</button>
-  <button id="logoutBtn" style="display:none;">Logout</button>
+    <!-- VERTEX AI CHAT -->
+    <h2>Vertex AI Chat</h2>
+    <input id="ai-input" placeholder="Ask AI anything..." />
+    <button onclick="sendAI()">Send</button>
+    <div id="ai-response"></div>
 
-  <hr style="margin:15px 0; border-color:#555;"/>
-  <button id="googleBtn" class="provider-btn">Login with Google</button>
-  <button id="githubBtn" class="provider-btn github-btn">Login with GitHub</button>
-</section>
+    <!-- TYREESE AI -->
+    <h2>Tyreese AI Chat</h2>
+    <input id="tyreese-input" placeholder="Talk to Tyreese" />
+    <button onclick="talkTyreese()">Send</button>
+    <div id="tyreese-response"></div>
 
-<!-- Protected Content -->
-<div id="protectedContent">
+    <!-- MINI GAMES -->
+    <h2>Mini Crazy Games</h2>
+    <iframe src="https://www.crazygames.com/" width="800" height="600"></iframe>
 
-  <!-- Mini Crazy Games -->
-  <section id="mini-crazy-games">
-    <h2>🎮 Mini Crazy Games</h2>
-    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;">
-      <iframe src="https://www.crazygames.com/embed/moto-x3m" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-      <iframe src="https://www.crazygames.com/embed/shell-shockers" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-      <iframe src="https://www.crazygames.com/embed/krunker-io" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-      <iframe src="https://www.crazygames.com/embed/happy-wheels" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-      <iframe src="https://www.crazygames.com/embed/bloxdhop-io" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+    <!-- AI YOUTUBE LAUNCHER -->
+    <h2>AI YouTube Launcher</h2>
+    <div id="ai-youtube">
+      <button onclick="playCategory('funny')">Funny</button>
+      <button onclick="playCategory('anime')">Anime</button>
+      <button onclick="playCategory('weird')">Weird</button>
+      <button onclick="playCategory('dark')">Dark</button>
+      <button onclick="playCategory('disney conspiracy theories')">Disney Conspiracies</button>
+      <div id="youtube-video"></div>
     </div>
-  </section>
 
-  <!-- AI YouTube Launcher -->
-  <section id="ai-videos">
-    <h2>🎬 AI YouTube Launcher</h2>
-    <div id="video-container" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;"></div>
-  </section>
+    <!-- MARKETPLACE -->
+    <h2>Marketplace</h2>
+    <div id="market-items"></div>
+    <button onclick="buyItem('Car')">Buy Car ($50k)</button>
+    <button onclick="buyItem('House')">Buy House ($200k)</button>
+    <p>Your Money: <span id="money-display">0</span></p>
 
-  <!-- Tyreese AI Assistant -->
-  <section id="tyreese">
-    <h2>🤘 Tyreese - Your Cool AI Assistant</h2>
-    <div id="tyreeseMessages"></div>
-    <form id="tyreeseForm" style="display:flex; gap:10px; margin-top:10px;">
-      <input type="text" id="tyreeseInput" placeholder="Ask Tyreese..." required style="flex:1; padding:10px; border-radius:8px;"/>
-      <button type="submit" style="padding:10px 20px; border-radius:8px; background:#4a32a8; color:white;">Send</button>
-    </form>
-  </section>
+    <!-- GAMBLING -->
+    <h2>Gambling</h2>
+    <input type="number" id="gamble-amount" placeholder="Gamble Points">
+    <button onclick="playSlot()">Play Slot</button>
+    <p>Gambling Points: <span id="gambling-display">0</span></p>
+    <p id="gamble-result"></p>
 
-  <!-- Social Media Section -->
-  <section id="social-media">
-    <h2>📝 Social Feed</h2>
+  </div>
 
-    <!-- Create Post -->
-    <textarea id="postContent" placeholder="Write a new post..." rows="3" style="width:100%;"></textarea>
-    <button id="createPostBtn">Post</button>
+  <script type="module">
+    // FIREBASE CONFIG
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-    <!-- Feed -->
-    <div id="postFeed"></div>
-  </section>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-functions.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
-</div>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const functions = getFunctions(app);
+    const db = getFirestore();
 
-<script>
-const authMessages = document.getElementById("auth-messages");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const signupBtn = document.getElementById("signupBtn");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const protectedContent = document.getElementById("protectedContent");
+    const signupBtn = document.getElementById("signup-btn");
+    const signinBtn = document.getElementById("signin-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const googleBtn = document.getElementById("google-btn");
+    const githubBtn = document.getElementById("github-btn");
+    const authMessages = document.getElementById("auth-messages");
+    const protectedContent = document.getElementById("protected-content");
 
-let currentUserUid = null;
+    let currentUserUid = null;
+    let userData = { money: 0, gamblingPoints: 0 };
 
-// ---------------- Firebase Auth ----------------
-signupBtn.addEventListener("click", async () => {
-  try {
-    await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
-  } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
-});
+    // EMAIL SIGNUP
+    signupBtn.onclick = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try { await createUserWithEmailAndPassword(auth, email, password); }
+      catch(err){ authMessages.textContent = err.message; }
+    };
 
-loginBtn.addEventListener("click", async () => {
-  try {
-    await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
-  } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
-});
+    // EMAIL SIGNIN
+    signinBtn.onclick = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try { await signInWithEmailAndPassword(auth, email, password); }
+      catch(err){ authMessages.textContent = err.message; }
+    };
 
-logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
+    // GOOGLE LOGIN
+    googleBtn.onclick = async () => {
+      const provider = new GoogleAuthProvider();
+      try { await signInWithPopup(auth, provider); } 
+      catch(err){ authMessages.textContent = err.message; }
+    };
 
-document.getElementById("googleBtn").addEventListener("click", () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-      .catch(error => authMessages.textContent = "❌ Google login error: " + error.message);
-});
+    // GITHUB LOGIN
+    githubBtn.onclick = async () => {
+      const provider = new GithubAuthProvider();
+      try { await signInWithPopup(auth, provider); } 
+      catch(err){ authMessages.textContent = err.message; }
+    };
 
-document.getElementById("githubBtn").addEventListener("click", () => {
-  const provider = new firebase.auth.GithubAuthProvider();
-  auth.signInWithPopup(provider)
-      .catch(error => authMessages.textContent = "❌ GitHub login error: " + error.message);
-});
+    // LOGOUT
+    logoutBtn.onclick = async () => { await signOut(auth); };
 
-auth.onAuthStateChanged(user => {
-  if(user){
-    authMessages.textContent = "✅ Logged in as " + (user.email || user.displayName);
-    logoutBtn.style.display = "inline-block";
-    protectedContent.style.display = "block";
-    currentUserUid = user.uid;
-    fetchPosts();
-  } else {
-    authMessages.textContent = "🔐 Please log in or sign up";
-    logoutBtn.style.display = "none";
-    protectedContent.style.display = "none";
-    currentUserUid = null;
-  }
-});
+    // AUTH STATE
+    onAuthStateChanged(auth, async user => {
+      if(user){
+        currentUserUid = user.uid;
+        protectedContent.style.display = "block";
+        logoutBtn.style.display = "inline-block";
+        authMessages.textContent = "Logged in as: " + (user.email || user.displayName);
 
-// ---------------- Tyreese AI ----------------
-const tyreeseForm = document.getElementById("tyreeseForm");
-const tyreeseInput = document.getElementById("tyreeseInput");
-const tyreeseMessages = document.getElementById("tyreeseMessages");
-
-tyreeseForm.addEventListener("submit", e => {
-  e.preventDefault();
-  const userMsg = tyreeseInput.value;
-  const divUser = document.createElement("div");
-  divUser.textContent = "You: " + userMsg;
-  tyreeseMessages.appendChild(divUser);
-
-  const divAI = document.createElement("div");
-  divAI.textContent = "Tyreese: " + generateTyreeseReply(userMsg);
-  tyreeseMessages.appendChild(divAI);
-
-  tyreeseInput.value = "";
-  tyreeseMessages.scrollTop = tyreeseMessages.scrollHeight;
-});
-
-function generateTyreeseReply(msg){
-  const responses = [
-    "Cool! I like that.",
-    "Interesting idea 😎",
-    "Hmm, let me think about it...",
-    "Haha, that's wild!",
-    "I can do that for you!"
-  ];
-  return responses[Math.floor(Math.random()*responses.length)];
-}
-
-// ---------------- Back4App Social Media ----------------
-const createPostBtn = document.getElementById("createPostBtn");
-const postContent = document.getElementById("postContent");
-const postFeed = document.getElementById("postFeed");
-
-createPostBtn.addEventListener("click", async () => {
-  if(!currentUserUid) return;
-  const content = postContent.value.trim();
-  if(!content) return;
-
-  const Post = Parse.Object.extend("Post");
-  const post = new Post();
-  post.set("authorId", currentUserUid);
-  post.set("content", content);
-  post.set("createdAt", new Date());
-
-  try{
-    await post.save();
-    postContent.value = "";
-    fetchPosts();
-  }catch(err){ alert("Error creating post: "+err.message); }
-});
-
-async function fetchPosts(){
-  postFeed.innerHTML = "";
-  const Post = Parse.Object.extend("Post");
-  const query = new Parse.Query(Post);
-  query.descending("createdAt");
-  const results = await query.find();
-
-  for(const post of results){
-    const div = document.createElement("div");
-    div.className = "post-container";
-
-    // Fetch author display name from Back4App User class
-    const authorQuery = new Parse.Query(Parse.User);
-    authorQuery.equalTo("objectId", post.get("authorId"));
-    const author = await authorQuery.first();
-    const authorName = author ? (author.get("username") || author.get("email")) : "Unknown";
-
-    div.innerHTML = `<strong>${authorName}</strong>: ${post.get("content")}`;
-
-    // Likes
-    const Like = Parse.Object.extend("Like");
-    const likeBtn = document.createElement("button");
-    likeBtn.className = "like-btn";
-    likeBtn.textContent = "❤️ Like";
-    likeBtn.addEventListener("click", async () => {
-      const like = new Like();
-      like.set("user", currentUserUid);
-      like.set("post", post);
-      like.set("createdAt", new Date());
-      await like.save();
-      fetchPosts();
-    });
-    div.appendChild(likeBtn);
-
-    // Comments
-    const Comment = Parse.Object.extend("Comment");
-    const commentsQuery = new Parse.Query(Comment);
-    commentsQuery.equalTo("post", post);
-    const comments = await commentsQuery.find();
-    comments.forEach(c => {
-      const commentDiv = document.createElement("div");
-      commentDiv.className = "comment-container";
-      commentDiv.textContent = `${c.get("author")} : ${c.get("text")}`;
-      div.appendChild(commentDiv);
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        if(!docSnap.exists()){
+          await setDoc(userRef, { money: 100000, gamblingPoints: 1000 });
+          userData = { money: 100000, gamblingPoints: 1000 };
+        } else { userData = docSnap.data(); }
+        updateDisplays();
+      } else {
+        protectedContent.style.display = "none";
+        logoutBtn.style.display = "none";
+        authMessages.textContent = "Please log in.";
+      }
     });
 
-    const commentInput = document.createElement("input");
-    commentInput.placeholder = "Add a comment...";
-    const commentBtn = document.createElement("button");
-    commentBtn.className = "comment-btn";
-    commentBtn.textContent = "Comment";
-    commentBtn.addEventListener("click", async () => {
-      const text = commentInput.value.trim();
-      if(!text) return;
-      const comment = new Comment();
-      comment.set("author", currentUserUid);
-      comment.set("post", post);
-      comment.set("text", text);
-      comment.set("createdAt", new Date());
-      await comment.save();
-      fetchPosts();
-    });
-    div.appendChild(commentInput);
-    div.appendChild(commentBtn);
+    function updateDisplays(){
+      document.getElementById("money-display").innerText = userData.money;
+      document.getElementById("gambling-display").innerText = userData.gamblingPoints;
+    }
 
-    postFeed.appendChild(div);
-  }
-}
+    // VERTEX AI
+    async function sendAI(){
+      const prompt = document.getElementById("ai-input").value;
+      if(!prompt) return;
+      const queryVertexAI = httpsCallable(functions, "queryVertexAI");
+      const response = await queryVertexAI({ prompt });
+      document.getElementById("ai-response").innerText = response.data.error || response.data.result;
+    }
 
-// ---------------- AI YouTube Launcher (Demo) ----------------
-const videoContainer = document.getElementById("video-container");
-const categories = {
-  funny:["https://www.youtube.com/embed/tgbNymZ7vqY","https://www.youtube.com/embed/5qap5aO4i9A"],
-  anime:["https://www.youtube.com/embed/s7L2PVdrb_8","https://www.youtube.com/embed/2Vv-BfVoq4g"],
-  weird:["https://www.youtube.com/embed/3JZ_D3ELwOQ","https://www.youtube.com/embed/L_jWHffIx5E"],
-  dark:["https://www.youtube.com/embed/e-ORhEE9VVg","https://www.youtube.com/embed/kXYiU_JCYtU"],
-  disney:["https://www.youtube.com/embed/QtXby3twMmI","https://www.youtube.com/embed/YQHsXMglC9A"]
-};
-for(let cat in categories){
-  categories[cat].forEach(url => {
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    videoContainer.appendChild(iframe);
-  });
-}
-</script>
+    // TYREESE AI
+    async function talkTyreese(){
+      const prompt = document.getElementById("tyreese-input").value;
+      if(!prompt) return;
+      const queryVertexAI = httpsCallable(functions, "queryVertexAI");
+      const response = await queryVertexAI({ prompt: "Tyreese style: " + prompt });
+      document.getElementById("tyreese-response").innerText = response.data.error || response.data.result;
+    }
+
+    // AI YOUTUBE LAUNCHER
+    function playCategory(category){
+      const ytDiv = document.getElementById("youtube-video");
+      ytDiv.innerHTML = `<iframe width="560" height="315" src="https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(category)}+AI" allowfullscreen></iframe>`;
+    }
+
+    // MARKETPLACE
+    async function buyItem(itemName){
+      const prices = { "Car": 50000, "House": 200000 };
+      const price = prices[itemName];
+      if(userData.money >= price){
+        userData.money -= price;
+        await updateDoc(doc(db, "users", currentUserUid), { money: userData.money });
+        updateDisplays();
+        alert(`You bought a ${itemName}!`);
+      } else alert("Not enough money!");
+    }
+
+    // GAMBLING
+    async function playSlot(){
+      const amount = parseInt(document.getElementById("gamble-amount").value);
+      if(amount > userData.gamblingPoints) return alert("Not enough points!");
+      userData.gamblingPoints -= amount;
+
+      const rand = Math.random() * 100;
+      let winAmount = 0;
+      if(rand <= 1){ winAmount = 1000000; } // Big Jackpot
+      else if(rand <= 12){ winAmount = 90000; }
+      else if(rand <= 32){ winAmount = 30000; }
+      else { winAmount = 0; }
+
+      userData.gamblingPoints += winAmount;
+      await updateDoc(doc(db, "users", currentUserUid), { gamblingPoints: userData.gamblingPoints });
+      updateDisplays();
+      document.getElementById("gamble-result").innerText = winAmount > 0 ? `You won ${winAmount} points!` : "You lost!";
+    }
+  </script>
 </body>
 </html>
