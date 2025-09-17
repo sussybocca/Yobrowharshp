@@ -3,25 +3,35 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Ultimate AI Game Hub</title>
+<title>Ultimate AI Game Hub - Firebase</title>
 
-<!-- Include Parse SDK for Back4App -->
-<script type="text/javascript" src="https://unpkg.com/parse/dist/parse.min.js"></script>
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
 <style>
   body { font-family: Arial, sans-serif; background:#1e1e1e; color:#fff; margin:0; padding:0; }
   header { background:#333; padding:20px; text-align:center; }
   section { padding:20px; }
   h2 { color:#f0f0f0; text-align:center; }
-  input, textarea, button { padding:8px; margin:5px 0; border-radius:5px; border:none; }
-  #auth-messages { margin-bottom:10px; color: #ffcc00; }
-  #video-container iframe, #mini-crazy-games iframe { width:300px; height:200px; border:none; border-radius:5px; }
+  input, button { padding:10px; margin:5px 0; border-radius:5px; border:none; }
+  #auth-messages { margin-bottom:10px; color:#ffcc00; }
 </style>
 
 <script>
-  // Initialize Parse (Back4App)
-  Parse.initialize("YOUR_APP_ID", "Jn0OtMspM5CVQh3MmBeggHLMHgo0E8dQoDCHD9el");
-  Parse.serverURL = "https://parseapi.back4app.com/";
+  // ---------------- Firebase Configuration ----------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
+    authDomain: "YOUR_FIREBASE_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_FIREBASE_PROJECT_ID",
+    storageBucket: "YOUR_FIREBASE_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 </script>
 </head>
 <body>
@@ -36,45 +46,16 @@
   <h2>🔑 Login / Signup</h2>
   <div id="auth-messages"></div>
 
-  <input type="text" id="username" placeholder="Username" required/>
+  <input type="email" id="email" placeholder="Email" required/>
   <input type="password" id="password" placeholder="Password" required/>
   <button id="signupBtn">Sign Up</button>
   <button id="loginBtn">Login</button>
   <button id="logoutBtn" style="display:none;">Logout</button>
 </section>
 
-<!-- Mini Crazy Games -->
-<section id="mini-crazy-games">
-  <h2>🎮 Mini Crazy Games</h2>
-  <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;">
-    <iframe src="https://www.crazygames.com/embed/moto-x3m" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-    <iframe src="https://www.crazygames.com/embed/shell-shockers" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-    <iframe src="https://www.crazygames.com/embed/krunker-io" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-    <iframe src="https://www.crazygames.com/embed/happy-wheels" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-    <iframe src="https://www.crazygames.com/embed/bloxdhop-io" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-  </div>
-</section>
-
-<!-- AI YouTube Launcher -->
-<section id="ai-videos">
-  <h2>🎬 AI YouTube Launcher</h2>
-  <div id="video-container" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;"></div>
-</section>
-
-<!-- Tyreese AI Assistant -->
-<section id="tyreese">
-  <h2>🤘 Tyreese - Your Cool AI Assistant</h2>
-  <div id="tyreeseMessages" style="height:250px; overflow-y:auto; background: rgba(0,0,0,0.2); padding:15px; border-radius:10px; font-style:italic;"></div>
-  <form id="tyreeseForm" style="display:flex; gap:10px; margin-top:10px;">
-    <input type="text" id="tyreeseInput" placeholder="Ask Tyreese..." required style="flex:1; padding:10px; border-radius:8px;"/>
-    <button type="submit" style="padding:10px 20px; border-radius:8px; background:#4a32a8; color:white;">Send</button>
-  </form>
-</section>
-
 <script>
-  // ---------------- Back4App User Login System ----------------
   const authMessages = document.getElementById("auth-messages");
-  const usernameInput = document.getElementById("username");
+  const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const signupBtn = document.getElementById("signupBtn");
   const loginBtn = document.getElementById("loginBtn");
@@ -82,75 +63,43 @@
 
   // Sign Up
   signupBtn.addEventListener("click", async () => {
-    const user = new Parse.User();
-    user.set("username", usernameInput.value);
-    user.set("password", passwordInput.value);
-
     try {
-      await user.signUp();
-      authMessages.textContent = "✅ Sign up successful! Logged in as " + usernameInput.value;
+      await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
+      authMessages.textContent = "✅ Sign up successful! Logged in as " + emailInput.value;
       logoutBtn.style.display = "inline-block";
     } catch (error) {
-      authMessages.textContent = "❌ Error: " + error.message;
+      authMessages.textContent = "❌ Sign up error: " + error.message;
     }
   });
 
   // Login
   loginBtn.addEventListener("click", async () => {
     try {
-      const user = await Parse.User.logIn(usernameInput.value, passwordInput.value);
-      authMessages.textContent = "✅ Logged in as " + user.get("username");
+      await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
+      authMessages.textContent = "✅ Logged in as " + emailInput.value;
       logoutBtn.style.display = "inline-block";
     } catch (error) {
-      authMessages.textContent = "❌ Error: " + error.message;
+      authMessages.textContent = "❌ Login error: " + error.message;
     }
   });
 
   // Logout
   logoutBtn.addEventListener("click", async () => {
-    await Parse.User.logOut();
+    await auth.signOut();
     authMessages.textContent = "✅ Logged out!";
     logoutBtn.style.display = "none";
   });
 
-  // Auto-login if user is already logged in
-  const currentUser = Parse.User.current();
-  if (currentUser) {
-    authMessages.textContent = "✅ Logged in as " + currentUser.get("username");
-    logoutBtn.style.display = "inline-block";
-  }
+  // Auth state observer
+  auth.onAuthStateChanged(user => {
+    if(user){
+      authMessages.textContent = "✅ Logged in as " + user.email;
+      logoutBtn.style.display = "inline-block";
+    } else {
+      authMessages.textContent = "🔐 Please log in or sign up";
+      logoutBtn.style.display = "none";
+    }
 
-  // ---------------- Tyreese AI ----------------
-  const tyreeseForm = document.getElementById("tyreeseForm");
-  const tyreeseInput = document.getElementById("tyreeseInput");
-  const tyreeseMessages = document.getElementById("tyreeseMessages");
-
-  tyreeseForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const userMsg = tyreeseInput.value;
-    const divUser = document.createElement("div");
-    divUser.classList.add("user-msg");
-    divUser.textContent = "You: " + userMsg;
-    tyreeseMessages.appendChild(divUser);
-
-    // Example AI response
-    const divAI = document.createElement("div");
-    divAI.classList.add("tyreese-msg");
-    divAI.textContent = "Tyreese: 😎 Yo! I got you – " + userMsg;
-    tyreeseMessages.appendChild(divAI);
-
-    tyreeseInput.value = "";
-    tyreeseMessages.scrollTop = tyreeseMessages.scrollHeight;
-  });
-
-  // ---------------- AI Video Launcher Example ----------------
-  const videoContainer = document.getElementById("video-container");
-  const categories = ["Funny", "Anime", "Weird", "Dark", "Disney Conspiracy"];
-  categories.forEach(cat => {
-    const iframe = document.createElement("iframe");
-    iframe.src = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(cat + " AI");
-    videoContainer.appendChild(iframe);
-  });
 </script>
 
 </body>
