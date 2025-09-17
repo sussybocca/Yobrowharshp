@@ -8,13 +8,9 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-check-compat.js"></script>
 
 <!-- Back4App / Parse SDK -->
 <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
-
-<!-- reCAPTCHA v3 -->
-<script src="https://www.google.com/recaptcha/enterprise.js?render=6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ"></script>
 
 <style>
 body { font-family: Arial, sans-serif; background:#1e1e1e; color:#fff; margin:0; padding:0; }
@@ -45,27 +41,11 @@ iframe { width:300px; height:200px; border:none; border-radius:5px; }
   };
   firebase.initializeApp(firebaseConfig);
 
-  // ---------------- App Check ----------------
-  const appCheck = firebase.appCheck();
-  appCheck.activate('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ', true);
-
   const auth = firebase.auth();
 
   // ---------------- Back4App Init ----------------
   Parse.initialize("V32Kr6GQj0LknYPynIG8T0MwgEKAcLNxmLEDzauo"); // JS Key
   Parse.serverURL = 'https://parseapi.back4app.com/';
-
-  // ---------------- reCAPTCHA Token ----------------
-  async function getRecaptchaToken(action) {
-    return new Promise((resolve, reject) => {
-      grecaptcha.enterprise.ready(async () => {
-        try {
-          const token = await grecaptcha.enterprise.execute('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ', { action: action });
-          resolve(token);
-        } catch (err) { reject(err); }
-      });
-    });
-  }
 </script>
 </head>
 <body>
@@ -150,14 +130,12 @@ let currentUserUid = null;
 // ---------------- Firebase Auth ----------------
 signupBtn.addEventListener("click", async () => {
   try {
-    const token = await getRecaptchaToken('SIGNUP');
     await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
   } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
 });
 
 loginBtn.addEventListener("click", async () => {
   try {
-    const token = await getRecaptchaToken('LOGIN');
     await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
   } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
 });
@@ -166,16 +144,14 @@ logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
 
 document.getElementById("googleBtn").addEventListener("click", () => {
   const provider = new firebase.auth.GoogleAuthProvider();
-  getRecaptchaToken('GOOGLE_LOGIN')
-    .then(token => auth.signInWithPopup(provider))
-    .catch(error => authMessages.textContent = "❌ Google login error: " + error.message);
+  auth.signInWithPopup(provider)
+      .catch(error => authMessages.textContent = "❌ Google login error: " + error.message);
 });
 
 document.getElementById("githubBtn").addEventListener("click", () => {
   const provider = new firebase.auth.GithubAuthProvider();
-  getRecaptchaToken('GITHUB_LOGIN')
-    .then(token => auth.signInWithPopup(provider))
-    .catch(error => authMessages.textContent = "❌ GitHub login error: " + error.message);
+  auth.signInWithPopup(provider)
+      .catch(error => authMessages.textContent = "❌ GitHub login error: " + error.message);
 });
 
 auth.onAuthStateChanged(user => {
@@ -184,7 +160,7 @@ auth.onAuthStateChanged(user => {
     logoutBtn.style.display = "inline-block";
     protectedContent.style.display = "block";
     currentUserUid = user.uid;
-    fetchPosts(); // Load social feed
+    fetchPosts();
   } else {
     authMessages.textContent = "🔐 Please log in or sign up";
     logoutBtn.style.display = "none";
@@ -229,7 +205,6 @@ const createPostBtn = document.getElementById("createPostBtn");
 const postContent = document.getElementById("postContent");
 const postFeed = document.getElementById("postFeed");
 
-// Create Post
 createPostBtn.addEventListener("click", async () => {
   if(!currentUserUid) return;
   const content = postContent.value.trim();
@@ -248,49 +223,52 @@ createPostBtn.addEventListener("click", async () => {
   }catch(err){ alert("Error creating post: "+err.message); }
 });
 
-// Fetch Posts with Comments, Likes, Follows
 async function fetchPosts(){
   postFeed.innerHTML = "";
   const Post = Parse.Object.extend("Post");
   const query = new Parse.Query(Post);
   query.descending("createdAt");
   const results = await query.find();
-  results.forEach(post => {
+
+  for(const post of results){
     const div = document.createElement("div");
     div.className = "post-container";
-    div.innerHTML = `<strong>Author UID:</strong> ${post.get("authorId")}<br>${post.get("content")}`;
+
+    // Fetch author display name from Back4App User class
+    const authorQuery = new Parse.Query(Parse.User);
+    authorQuery.equalTo("objectId", post.get("authorId"));
+    const author = await authorQuery.first();
+    const authorName = author ? (author.get("username") || author.get("email")) : "Unknown";
+
+    div.innerHTML = `<strong>${authorName}</strong>: ${post.get("content")}`;
 
     // Likes
+    const Like = Parse.Object.extend("Like");
     const likeBtn = document.createElement("button");
     likeBtn.className = "like-btn";
     likeBtn.textContent = "❤️ Like";
     likeBtn.addEventListener("click", async () => {
-      const Like = Parse.Object.extend("Like");
       const like = new Like();
       like.set("user", currentUserUid);
       like.set("post", post);
       like.set("createdAt", new Date());
       await like.save();
-      alert("Liked!");
+      fetchPosts();
     });
     div.appendChild(likeBtn);
 
-    // Follow (dummy example)
-    const followBtn = document.createElement("button");
-    followBtn.className = "follow-btn";
-    followBtn.textContent = "➕ Follow Author";
-    followBtn.addEventListener("click", async () => {
-      const Follow = Parse.Object.extend("Follow");
-      const follow = new Follow();
-      follow.set("follower", currentUserUid);
-      follow.set("followed", post.get("authorId"));
-      follow.set("createdAt", new Date());
-      await follow.save();
-      alert("Followed!");
-    });
-    div.appendChild(followBtn);
-
     // Comments
+    const Comment = Parse.Object.extend("Comment");
+    const commentsQuery = new Parse.Query(Comment);
+    commentsQuery.equalTo("post", post);
+    const comments = await commentsQuery.find();
+    comments.forEach(c => {
+      const commentDiv = document.createElement("div");
+      commentDiv.className = "comment-container";
+      commentDiv.textContent = `${c.get("author")} : ${c.get("text")}`;
+      div.appendChild(commentDiv);
+    });
+
     const commentInput = document.createElement("input");
     commentInput.placeholder = "Add a comment...";
     const commentBtn = document.createElement("button");
@@ -299,20 +277,19 @@ async function fetchPosts(){
     commentBtn.addEventListener("click", async () => {
       const text = commentInput.value.trim();
       if(!text) return;
-      const Comment = Parse.Object.extend("Comment");
       const comment = new Comment();
       comment.set("author", currentUserUid);
       comment.set("post", post);
       comment.set("text", text);
       comment.set("createdAt", new Date());
       await comment.save();
-      fetchPosts(); // refresh feed
+      fetchPosts();
     });
     div.appendChild(commentInput);
     div.appendChild(commentBtn);
 
     postFeed.appendChild(div);
-  });
+  }
 }
 
 // ---------------- AI YouTube Launcher (Demo) ----------------
@@ -324,7 +301,6 @@ const categories = {
   dark:["https://www.youtube.com/embed/e-ORhEE9VVg","https://www.youtube.com/embed/kXYiU_JCYtU"],
   disney:["https://www.youtube.com/embed/QtXby3twMmI","https://www.youtube.com/embed/YQHsXMglC9A"]
 };
-
 for(let cat in categories){
   categories[cat].forEach(url => {
     const iframe = document.createElement("iframe");
@@ -333,6 +309,5 @@ for(let cat in categories){
   });
 }
 </script>
-
 </body>
 </html>
