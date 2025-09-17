@@ -1,67 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Firebase Login Test</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rebuilt AI Game Hub — Step 1</title>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<!-- Firebase SDKs (only app & auth for now) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+<style>
+  :root{--bg:#121212;--panel:#1f1f1f;--muted:#9aa0a6;--accent:#4a90e2}
+  body{font-family:Inter,system-ui,Segoe UI,Arial;margin:0;background:var(--bg);color:#fff}
+  header{background:#222;padding:18px 12px;text-align:center}
+  main{padding:18px;max-width:1100px;margin:0 auto}
+  section{background:var(--panel);padding:14px;border-radius:10px;margin-bottom:14px}
+  h1,h2{margin:0 0 8px}
+  input,button{padding:10px;border-radius:8px;border:0;outline:none}
+  input{width:100%;box-sizing:border-box;margin-bottom:8px;background:#111;color:#fff}
+  .row{display:flex;gap:8px}
+  .col{flex:1}
+  .small{width:140px}
+  .providers{display:flex;gap:8px;flex-wrap:wrap}
+  iframe{border:0;border-radius:8px}
+  .games-grid{display:flex;flex-wrap:wrap;gap:10px}
+  .games-grid iframe{width:320px;height:180px}
+  #tyreeseMessages{height:220px;overflow:auto;background:#0f0f11;padding:10px;border-radius:8px}
+  .muted{color:var(--muted)}
+</style>
 </head>
 <body>
-  <h2>Login Test</h2>
-  <div id="status">Not logged in</div>
-  <button id="googleBtn">Login with Google</button>
-  <button id="githubBtn">Login with GitHub</button>
-  <button id="logoutBtn" style="display:none;">Logout</button>
+<header>
+  <h1>🎮 Rebuilt AI Game Hub — Step 1</h1>
+  <div class="muted">Login works first. Features added in layers.</div>
+</header>
 
-  <script>
-    // --- Your Firebase config ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
-      authDomain: "yodude-44fdb.firebaseapp.com",
-      projectId: "yodude-44fdb",
-      storageBucket: "yodude-44fdb.appspot.com",
-      messagingSenderId: "421085612215",
-      appId: "1:421085612215:web:YOUR_APP_ID_HERE"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+<main>
+  <!-- Auth -->
+  <section id="auth">
+    <h2>🔐 Sign In / Sign Up</h2>
+    <div id="auth-messages" class="muted">Not signed in</div>
 
-    const status = document.getElementById("status");
-    const logoutBtn = document.getElementById("logoutBtn");
+    <input id="email" type="email" placeholder="Email (for email/password)" />
+    <input id="password" type="password" placeholder="Password" />
 
-    // Google Login
-    document.getElementById("googleBtn").addEventListener("click", () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(res => status.textContent = "Logged in as " + (res.user.displayName || res.user.email))
-        .catch(err => status.textContent = "Error: " + err.message);
+    <div class="row">
+      <button id="signupBtn" class="col">Sign Up</button>
+      <button id="loginBtn" class="col">Login</button>
+      <button id="logoutBtn" class="small" style="display:none">Logout</button>
+    </div>
+
+    <hr style="border-color:#2a2a2a;margin:12px 0" />
+
+    <div class="providers">
+      <button id="googleBtn" style="background:var(--accent)" class="small">Google</button>
+      <button id="githubBtn" style="background:#333" class="small">GitHub</button>
+    </div>
+
+    <div class="muted" style="margin-top:8px;font-size:13px">
+      Make sure providers are enabled in Firebase Authentication console (Google / GitHub).
+    </div>
+  </section>
+
+  <!-- Protected content: hidden until login -->
+  <div id="protectedContent" style="display:none">
+    <!-- Mini Crazy Games -->
+    <section id="mini-crazy-games">
+      <h2>🎮 Mini Crazy Games</h2>
+      <div class="games-grid">
+        <iframe src="https://www.crazygames.com/embed/moto-x3m" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        <iframe src="https://www.crazygames.com/embed/krunker-io" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        <iframe src="https://www.crazygames.com/embed/happy-wheels" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+      </div>
+      <div class="muted" style="margin-top:10px">If a game iframe is blocked by the provider, open it in a new tab.</div>
+    </section>
+
+    <!-- AI Video Launcher -->
+    <section id="ai-videos">
+      <h2>🎬 AI YouTube Launcher</h2>
+      <div id="video-container" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+    </section>
+
+    <!-- Tyreese Assistant -->
+    <section id="tyreese">
+      <h2>🤘 Tyreese — Personal Assistant</h2>
+      <div id="tyreeseMessages"></div>
+      <form id="tyreeseForm" style="display:flex;gap:8px;margin-top:10px">
+        <input id="tyreeseInput" type="text" placeholder="Ask Tyreese anything..." />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </div>
+</main>
+
+<!-- JS (bottom so elements exist) -->
+<script>
+/* ================== Firebase config - use your project appId ==================
+   Replace appId value below with your Firebase web appId (from console) */
+const firebaseConfig = {
+  apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
+  authDomain: "yodude-44fdb.firebaseapp.com",
+  projectId: "yodude-44fdb",
+  storageBucket: "yodude-44fdb.appspot.com",
+  messagingSenderId: "421085612215",
+  appId: "1:421085612215:web:YOUR_APP_ID_HERE"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+/* ----------------- DOM refs ----------------- */
+const authMessages = document.getElementById('auth-messages');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const signupBtn = document.getElementById('signupBtn');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const protectedContent = document.getElementById('protectedContent');
+
+const googleBtn = document.getElementById('googleBtn');
+const githubBtn = document.getElementById('githubBtn');
+
+/* ========== Email/password handlers (unchanged from working base) ========== */
+signupBtn.addEventListener('click', () => {
+  const email = emailInput.value.trim();
+  const pw = passwordInput.value;
+  if (!email || !pw) return authMessages.textContent = 'Enter email & password';
+  auth.createUserWithEmailAndPassword(email, pw)
+    .catch(err => authMessages.textContent = 'Sign-up error: ' + err.message);
+});
+
+loginBtn.addEventListener('click', () => {
+  const email = emailInput.value.trim();
+  const pw = passwordInput.value;
+  if (!email || !pw) return authMessages.textContent = 'Enter email & password';
+  auth.signInWithEmailAndPassword(email, pw)
+    .catch(err => authMessages.textContent = 'Login error: ' + err.message);
+});
+
+logoutBtn.addEventListener('click', () => auth.signOut());
+
+/* ========== Social provider logins — popups must be created directly on click ========== */
+googleBtn.addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(res => {
+      const name = res.user.displayName || res.user.email;
+      authMessages.textContent = 'Welcome ' + name;
+      console.log('Google login success', res);
+    })
+    .catch(err => {
+      authMessages.textContent = 'Google error: ' + err.message;
+      console.error(err);
     });
+});
 
-    // GitHub Login
-    document.getElementById("githubBtn").addEventListener("click", () => {
-      const provider = new firebase.auth.GithubAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(res => status.textContent = "Logged in as " + (res.user.displayName || res.user.email))
-        .catch(err => status.textContent = "Error: " + err.message);
+githubBtn.addEventListener('click', () => {
+  const provider = new firebase.auth.GithubAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(res => {
+      const name = res.user.displayName || res.user.email;
+      authMessages.textContent = 'Welcome ' + name;
+      console.log('GitHub login success', res);
+    })
+    .catch(err => {
+      authMessages.textContent = 'GitHub error: ' + err.message;
+      console.error(err);
     });
+});
 
-    // Logout
-    logoutBtn.addEventListener("click", () => {
-      auth.signOut();
-    });
+/* ========== Auth state observer ========== */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    const name = user.displayName || user.email;
+    authMessages.textContent = 'Signed in: ' + name;
+    logoutBtn.style.display = 'inline-block';
+    protectedContent.style.display = 'block';
+  } else {
+    authMessages.textContent = 'Not signed in';
+    logoutBtn.style.display = 'none';
+    protectedContent.style.display = 'none';
+  }
+});
 
-    // Auth state
-    auth.onAuthStateChanged(user => {
-      if(user){
-        status.textContent = "✅ Logged in as " + (user.email || user.displayName);
-        logoutBtn.style.display = "inline-block";
-      } else {
-        status.textContent = "Not logged in";
-        logoutBtn.style.display = "none";
-      }
-    });
-  </script>
+/* ========== Add protected features ========== */
+/* AI video launcher */
+const videoContainer = document.getElementById('video-container');
+const categories = ['Funny','Anime','Weird','Dark','Disney Conspiracy'];
+categories.forEach(cat => {
+  const iframe = document.createElement('iframe');
+  iframe.width = 360; iframe.height = 215;
+  iframe.src = 'https://www.youtube.com/embed?listType=search&list=' + encodeURIComponent(cat + ' AI');
+  videoContainer.appendChild(iframe);
+});
+
+/* Tyreese assistant (local/simulated) */
+const tyreeseForm = document.getElementById('tyreeseForm');
+const tyreeseInput = document.getElementById('tyreeseInput');
+const tyreeseMessages = document.getElementById('tyreeseMessages');
+
+function addTyreeseMsg(text, cls) {
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = text;
+  tyreeseMessages.appendChild(d);
+  tyreeseMessages.scrollTop = tyreeseMessages.scrollHeight;
+}
+
+tyreeseForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const txt = tyreeseInput.value.trim();
+  if (!txt) return;
+  addTyreeseMsg('You: ' + txt, 'muted');
+  // Simulated "cool" response
+  setTimeout(() => addTyreeseMsg('Tyreese: 😎 Bet. I gotchu — ' + txt), 400);
+  tyreeseInput.value = '';
+});
+
+/* End of Step 1 features */
+</script>
 </body>
 </html>
