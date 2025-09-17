@@ -105,27 +105,15 @@ window.onload = () => {
   const logoutBtn = document.getElementById("logoutBtn");
   const protectedContent = document.getElementById("protectedContent");
 
-  // reCAPTCHA
-  async function getRecaptchaToken(action) {
-    return new Promise((resolve, reject) => {
-      grecaptcha.enterprise.ready(async () => {
-        try { const token = await grecaptcha.enterprise.execute('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ',{action}); resolve(token); }
-        catch(err){ reject(err);}
-      });
-    });
-  }
-
   // ---------------- Email/Password ----------------
   signupBtn.addEventListener("click", async () => {
     try {
-      const token = await getRecaptchaToken('SIGNUP'); console.log("reCAPTCHA token:", token);
       await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
     } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
   });
 
   loginBtn.addEventListener("click", async () => {
     try {
-      const token = await getRecaptchaToken('LOGIN'); console.log("reCAPTCHA token:", token);
       await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
     } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
   });
@@ -133,21 +121,19 @@ window.onload = () => {
   logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
 
   // ---------------- Google Login ----------------
-  document.getElementById("googleBtn").addEventListener("click", async () => {
-    try {
-      const token = await getRecaptchaToken('GOOGLE_LOGIN'); console.log("reCAPTCHA token:", token);
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-    } catch (error) { authMessages.textContent = "❌ Google login error: " + error.message; }
+  document.getElementById("googleBtn").addEventListener("click", () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then(result => console.log("✅ Google login success", result))
+      .catch(err => authMessages.textContent = "❌ Google login error: " + err.message);
   });
 
   // ---------------- GitHub Login ----------------
-  document.getElementById("githubBtn").addEventListener("click", async () => {
-    try {
-      const token = await getRecaptchaToken('GITHUB_LOGIN'); console.log("reCAPTCHA token:", token);
-      const provider = new firebase.auth.GithubAuthProvider();
-      await auth.signInWithPopup(provider);
-    } catch (error) { authMessages.textContent = "❌ GitHub login error: " + error.message; }
+  document.getElementById("githubBtn").addEventListener("click", () => {
+    const provider = new firebase.auth.GithubAuthProvider();
+    auth.signInWithPopup(provider)
+      .then(result => console.log("✅ GitHub login success", result))
+      .catch(err => authMessages.textContent = "❌ GitHub login error: " + err.message);
   });
 
   // ---------------- Auth State ----------------
