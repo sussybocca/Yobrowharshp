@@ -41,7 +41,7 @@ iframe { width:300px; height:200px; border:none; border-radius:5px; }
 
   // ---------------- App Check ----------------
   const appCheck = firebase.appCheck();
-  appCheck.activate('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ', true); // enforce mode
+  appCheck.activate('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ', true);
 
   const auth = firebase.auth();
 
@@ -52,9 +52,7 @@ iframe { width:300px; height:200px; border:none; border-radius:5px; }
         try {
           const token = await grecaptcha.enterprise.execute('6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ', { action: action });
           resolve(token);
-        } catch (err) {
-          reject(err);
-        }
+        } catch (err) { reject(err); }
       });
     });
   }
@@ -117,95 +115,94 @@ iframe { width:300px; height:200px; border:none; border-radius:5px; }
 </div>
 
 <script>
-  // ---------------- DOM Elements ----------------
-  const authMessages = document.getElementById("auth-messages");
-  const emailInput = document.getElementById("email");
-  const passwordInput = document.getElementById("password");
-  const signupBtn = document.getElementById("signupBtn");
-  const loginBtn = document.getElementById("loginBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const protectedContent = document.getElementById("protectedContent");
+const authMessages = document.getElementById("auth-messages");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const signupBtn = document.getElementById("signupBtn");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const protectedContent = document.getElementById("protectedContent");
 
-  // ---------------- Firebase Email/Password ----------------
-  signupBtn.addEventListener("click", async () => {
-    try {
-      const token = await getRecaptchaToken('SIGNUP');
-      console.log("reCAPTCHA token:", token);
-      await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
-    } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
-  });
+// ---------------- Email/Password ----------------
+signupBtn.addEventListener("click", async () => {
+  try {
+    const token = await getRecaptchaToken('SIGNUP');
+    console.log("reCAPTCHA token:", token);
+    await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
+  } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
+});
 
-  loginBtn.addEventListener("click", async () => {
-    try {
-      const token = await getRecaptchaToken('LOGIN');
-      console.log("reCAPTCHA token:", token);
-      await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
-    } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
-  });
+loginBtn.addEventListener("click", async () => {
+  try {
+    const token = await getRecaptchaToken('LOGIN');
+    console.log("reCAPTCHA token:", token);
+    await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
+  } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
+});
 
-  logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
+logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
 
-  // ---------------- Google Login ----------------
-  googleBtn.addEventListener("click", async () => {
+// ---------------- Google Login ----------------
+document.getElementById("googleBtn").addEventListener("click", async () => {
+  try {
+    const token = await getRecaptchaToken('GOOGLE_LOGIN');
+    console.log("reCAPTCHA token:", token);
     const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-      const token = await getRecaptchaToken('GOOGLE_LOGIN');
-      console.log("reCAPTCHA token:", token);
-      await auth.signInWithPopup(provider);
-    } catch (error) { authMessages.textContent = "❌ Google login error: " + error.message; }
-  });
+    await auth.signInWithPopup(provider);
+  } catch (error) { authMessages.textContent = "❌ Google login error: " + error.message; }
+});
 
-  // ---------------- GitHub Login ----------------
-  githubBtn.addEventListener("click", async () => {
-    const provider = new firebase.auth.GithubAuthProvider(); // ✅ Properly declared here
-    try {
-      const token = await getRecaptchaToken('GITHUB_LOGIN');
-      console.log("reCAPTCHA token:", token);
-      await auth.signInWithPopup(provider);
-    } catch (error) { authMessages.textContent = "❌ GitHub login error: " + error.message; }
-  });
+// ---------------- GitHub Login ----------------
+document.getElementById("githubBtn").addEventListener("click", async () => {
+  try {
+    const token = await getRecaptchaToken('GITHUB_LOGIN');
+    console.log("reCAPTCHA token:", token);
+    const provider = new firebase.auth.GithubAuthProvider(); // ✅ Correctly initialized
+    await auth.signInWithPopup(provider);
+  } catch (error) { authMessages.textContent = "❌ GitHub login error: " + error.message; }
+});
 
-  // ---------------- Auth State ----------------
-  auth.onAuthStateChanged(user => {
-    if(user){
-      authMessages.textContent = "✅ Logged in as " + (user.email || user.displayName);
-      logoutBtn.style.display = "inline-block";
-      protectedContent.style.display = "block";
-    } else {
-      authMessages.textContent = "🔐 Please log in or sign up";
-      logoutBtn.style.display = "none";
-      protectedContent.style.display = "none";
-    }
-  });
+// ---------------- Auth State ----------------
+auth.onAuthStateChanged(user => {
+  if(user){
+    authMessages.textContent = "✅ Logged in as " + (user.email || user.displayName);
+    logoutBtn.style.display = "inline-block";
+    protectedContent.style.display = "block";
+  } else {
+    authMessages.textContent = "🔐 Please log in or sign up";
+    logoutBtn.style.display = "none";
+    protectedContent.style.display = "none";
+  }
+});
 
-  // ---------------- Tyreese AI ----------------
-  const tyreeseForm = document.getElementById("tyreeseForm");
-  const tyreeseInput = document.getElementById("tyreeseInput");
-  const tyreeseMessages = document.getElementById("tyreeseMessages");
+// ---------------- Tyreese AI ----------------
+const tyreeseForm = document.getElementById("tyreeseForm");
+const tyreeseInput = document.getElementById("tyreeseInput");
+const tyreeseMessages = document.getElementById("tyreeseMessages");
 
-  tyreeseForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const userMsg = tyreeseInput.value;
-    const divUser = document.createElement("div");
-    divUser.textContent = "You: " + userMsg;
-    tyreeseMessages.appendChild(divUser);
+tyreeseForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const userMsg = tyreeseInput.value;
+  const divUser = document.createElement("div");
+  divUser.textContent = "You: " + userMsg;
+  tyreeseMessages.appendChild(divUser);
 
-    const divAI = document.createElement("div");
-    divAI.textContent = "Tyreese: 😎 Yo! I got you – " + userMsg;
-    tyreeseMessages.appendChild(divAI);
+  const divAI = document.createElement("div");
+  divAI.textContent = "Tyreese: 😎 Yo! I got you – " + userMsg;
+  tyreeseMessages.appendChild(divAI);
 
-    tyreeseInput.value = "";
-    tyreeseMessages.scrollTop = tyreeseMessages.scrollHeight;
-  });
+  tyreeseInput.value = "";
+  tyreeseMessages.scrollTop = tyreeseMessages.scrollHeight;
+});
 
-  // ---------------- AI Video Launcher ----------------
-  const videoContainer = document.getElementById("video-container");
-  const categories = ["Funny", "Anime", "Weird", "Dark", "Disney Conspiracy"];
-  categories.forEach(cat => {
-    const iframe = document.createElement("iframe");
-    iframe.src = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(cat + " AI");
-    videoContainer.appendChild(iframe);
-  });
+// ---------------- AI Video Launcher ----------------
+const videoContainer = document.getElementById("video-container");
+const categories = ["Funny", "Anime", "Weird", "Dark", "Disney Conspiracy"];
+categories.forEach(cat => {
+  const iframe = document.createElement("iframe");
+  iframe.src = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(cat + " AI");
+  videoContainer.appendChild(iframe);
+});
 </script>
 
 </body>
