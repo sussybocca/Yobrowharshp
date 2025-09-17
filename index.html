@@ -14,17 +14,17 @@
 <script src="https://www.google.com/recaptcha/enterprise.js?render=6LdbxMwrAAAAANzmgIgX76g2OW7X7qQSDKgkCbLZ"></script>
 
 <style>
-  body { font-family: Arial, sans-serif; background:#1e1e1e; color:#fff; margin:0; padding:0; }
-  header { background:#333; padding:20px; text-align:center; }
-  section { padding:20px; }
-  h2 { color:#f0f0f0; text-align:center; }
-  input, button { padding:10px; margin:5px 0; border-radius:5px; border:none; cursor:pointer; }
-  #auth-messages { margin-bottom:10px; color:#ffcc00; }
-  #protectedContent { display:none; }
-  iframe { width:300px; height:200px; border:none; border-radius:5px; }
-  #tyreeseMessages { height:250px; overflow-y:auto; background: rgba(0,0,0,0.2); padding:15px; border-radius:10px; font-style:italic; }
-  .provider-btn { background:#4a90e2; color:white; margin-top:5px; }
-  .github-btn { background:#333; }
+body { font-family: Arial, sans-serif; background:#1e1e1e; color:#fff; margin:0; padding:0; }
+header { background:#333; padding:20px; text-align:center; }
+section { padding:20px; }
+h2 { color:#f0f0f0; text-align:center; }
+input, button { padding:10px; margin:5px 0; border-radius:5px; border:none; cursor:pointer; }
+#auth-messages { margin-bottom:10px; color:#ffcc00; }
+#protectedContent { display:none; }
+iframe { width:300px; height:200px; border:none; border-radius:5px; }
+#tyreeseMessages { height:250px; overflow-y:auto; background: rgba(0,0,0,0.2); padding:15px; border-radius:10px; font-style:italic; }
+.provider-btn { background:#4a90e2; color:white; margin-top:5px; }
+.github-btn { background:#333; }
 </style>
 
 <script>
@@ -146,7 +146,6 @@
   logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
 
   // ---------------- Google Login ----------------
-  const googleBtn = document.getElementById("googleBtn");
   googleBtn.addEventListener("click", async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
@@ -157,9 +156,8 @@
   });
 
   // ---------------- GitHub Login ----------------
-  const githubBtn = document.getElementById("githubBtn");
   githubBtn.addEventListener("click", async () => {
-    const provider = new firebase.auth.GithubAuthProvider();
+    const provider = new firebase.auth.GithubAuthProvider(); // ✅ Properly declared here
     try {
       const token = await getRecaptchaToken('GITHUB_LOGIN');
       console.log("reCAPTCHA token:", token);
