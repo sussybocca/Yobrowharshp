@@ -14,11 +14,13 @@
   header { background:#333; padding:20px; text-align:center; }
   section { padding:20px; }
   h2 { color:#f0f0f0; text-align:center; }
-  input, button { padding:10px; margin:5px 0; border-radius:5px; border:none; }
+  input, button { padding:10px; margin:5px 0; border-radius:5px; border:none; cursor:pointer; }
   #auth-messages { margin-bottom:10px; color:#ffcc00; }
   #protectedContent { display:none; }
   iframe { width:300px; height:200px; border:none; border-radius:5px; }
   #tyreeseMessages { height:250px; overflow-y:auto; background: rgba(0,0,0,0.2); padding:15px; border-radius:10px; font-style:italic; }
+  .provider-btn { background:#4a90e2; color:white; margin-top:5px; }
+  .github-btn { background:#333; }
 </style>
 
 <script>
@@ -29,7 +31,7 @@
     projectId: "yodude-44fdb",
     storageBucket: "yodude-44fdb.appspot.com",
     messagingSenderId: "421085612215",
-    appId: "1:421085612215:web:YOUR_APP_ID_HERE" // replace with your actual appId from Firebase Console
+    appId: "1:421085612215:web:YOUR_APP_ID_HERE" // replace with your actual appId
   };
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
@@ -52,6 +54,10 @@
   <button id="signupBtn">Sign Up</button>
   <button id="loginBtn">Login</button>
   <button id="logoutBtn" style="display:none;">Logout</button>
+
+  <hr style="margin:15px 0; border-color:#555;"/>
+  <button id="googleBtn" class="provider-btn">Login with Google</button>
+  <button id="githubBtn" class="provider-btn github-btn">Login with GitHub</button>
 </section>
 
 <!-- Protected Content -->
@@ -98,24 +104,37 @@
   const protectedContent = document.getElementById("protectedContent");
 
   signupBtn.addEventListener("click", async () => {
-    try {
-      await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
-    } catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
+    try { await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value); }
+    catch (error) { authMessages.textContent = "❌ Sign up error: " + error.message; }
   });
 
   loginBtn.addEventListener("click", async () => {
-    try {
-      await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
-    } catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
+    try { await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value); }
+    catch (error) { authMessages.textContent = "❌ Login error: " + error.message; }
   });
 
-  logoutBtn.addEventListener("click", async () => {
-    await auth.signOut();
+  logoutBtn.addEventListener("click", async () => { await auth.signOut(); });
+
+  // ---------------- Google Login ----------------
+  const googleBtn = document.getElementById("googleBtn");
+  googleBtn.addEventListener("click", async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try { await auth.signInWithPopup(provider); }
+    catch (error) { authMessages.textContent = "❌ Google login error: " + error.message; }
   });
 
+  // ---------------- GitHub Login ----------------
+  const githubBtn = document.getElementById("githubBtn");
+  githubBtn.addEventListener("click", async () => {
+    const provider = new firebase.auth.GithubAuthProvider();
+    try { await auth.signInWithPopup(provider); }
+    catch (error) { authMessages.textContent = "❌ GitHub login error: " + error.message; }
+  });
+
+  // ---------------- Auth State Observer ----------------
   auth.onAuthStateChanged(user => {
     if(user){
-      authMessages.textContent = "✅ Logged in as " + user.email;
+      authMessages.textContent = "✅ Logged in as " + (user.email || user.displayName);
       logoutBtn.style.display = "inline-block";
       protectedContent.style.display = "block"; // Show all features
     } else {
