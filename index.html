@@ -4,9 +4,128 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI App with Firebase Login</title>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <!-- Firebase SDK (modular v9) -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
+      authDomain: "yodude-44fdb.firebaseapp.com",
+      databaseURL: "https://yodude-44fdb-default-rtdb.firebaseio.com",
+      projectId: "yodude-44fdb",
+      storageBucket: "yodude-44fdb.firebasestorage.app",
+      messagingSenderId: "421085612215",
+      appId: "1:421085612215:web:39232725a276e3b2dd2532",
+      measurementId: "G-WHM50CY06L"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // DOM Elements
+    const loginSection = document.getElementById('login-section');
+    const aiSection = document.getElementById('ai-section');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const promptInput = document.getElementById('prompt');
+    const aiResponseDiv = document.getElementById('ai-response');
+    const sendBtn = document.getElementById('send-btn');
+
+    // --- Auth Functions ---
+    async function signUp() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!email || !password) return alert("Email and password are required");
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("Sign Up Successful!");
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function signIn() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!email || !password) return alert("Email and password are required");
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        alert("Sign In Successful!");
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function signInWithGoogle() {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function signInWithGitHub() {
+      const provider = new GithubAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function logout() {
+      await signOut(auth);
+      aiResponseDiv.innerText = '';
+      promptInput.value = '';
+    }
+
+    // Monitor auth state
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        loginSection.style.display = 'none';
+        aiSection.style.display = 'block';
+      } else {
+        loginSection.style.display = 'block';
+        aiSection.style.display = 'none';
+      }
+    });
+
+    // --- AI Chat Function ---
+    async function sendPrompt() {
+      const promptText = promptInput.value.trim();
+      if (!promptText) return alert("Please enter a prompt");
+
+      aiResponseDiv.innerText = "Loading...";
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('https://ai-gateway-ghsotsa.replit.app/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: promptText })
+        });
+        const data = await res.json();
+        aiResponseDiv.innerText = data.result || ("Error: " + data.error);
+      } catch (err) {
+        aiResponseDiv.innerText = "Error: " + err.message;
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    // Attach functions to window for buttons
+    window.signUp = signUp;
+    window.signIn = signIn;
+    window.signInWithGoogle = signInWithGoogle;
+    window.signInWithGitHub = signInWithGitHub;
+    window.logout = logout;
+    window.sendPrompt = sendPrompt;
+  </script>
 </head>
 <body>
   <h1>Welcome to My AI App</h1>
@@ -26,92 +145,10 @@
   <div id="ai-section" style="display:none;">
     <h2>AI Assistant</h2>
     <textarea id="prompt" placeholder="Ask something..." rows="4" cols="50"></textarea><br>
-    <button onclick="sendPrompt()">Send</button>
+    <button id="send-btn" onclick="sendPrompt()">Send</button>
     <h3>Response:</h3>
     <div id="ai-response"></div>
     <button onclick="logout()">Logout</button>
   </div>
-
-  <script>
-    // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCFQmadEV0ekDEmF23sUu2ZPkpUzbpD7kY",
-      authDomain: "yodude-44fdb.firebaseapp.com",
-      databaseURL: "https://yodude-44fdb-default-rtdb.firebaseio.com",
-      projectId: "yodude-44fdb",
-      storageBucket: "yodude-44fdb.firebasestorage.app",
-      messagingSenderId: "421085612215",
-      appId: "1:421085612215:web:39232725a276e3b2dd2532",
-      measurementId: "G-WHM50CY06L"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    // Auth functions
-    function signUp() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => alert("Sign Up Successful"))
-        .catch(err => alert(err.message));
-    }
-
-    function signIn() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(err => alert(err.message));
-    }
-
-    function signInWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch(err => alert(err.message));
-    }
-
-    function signInWithGitHub() {
-      const provider = new firebase.auth.GithubAuthProvider();
-      auth.signInWithPopup(provider).catch(err => alert(err.message));
-    }
-
-    function logout() {
-      auth.signOut();
-    }
-
-    // Monitor auth state
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('ai-section').style.display = 'block';
-      } else {
-        document.getElementById('login-section').style.display = 'block';
-        document.getElementById('ai-section').style.display = 'none';
-      }
-    });
-
-    // AI Prompt function
-    async function sendPrompt() {
-      const promptText = document.getElementById('prompt').value;
-      if (!promptText) return alert("Please enter a prompt");
-
-      const responseDiv = document.getElementById('ai-response');
-      responseDiv.innerHTML = "Loading...";
-
-      try {
-        const res = await fetch('https://ai-gateway-ghsotsa.replit.app/query', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: promptText })
-        });
-        const data = await res.json();
-        if (data.result) {
-          responseDiv.innerHTML = data.result;
-        } else if (data.error) {
-          responseDiv.innerHTML = "Error: " + data.error;
-        }
-      } catch (err) {
-        responseDiv.innerHTML = "Error: " + err.message;
-      }
-    }
-  </script>
 </body>
 </html>
